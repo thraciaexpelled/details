@@ -23,5 +23,7 @@ root directory.
 ### Installing
 Run `bash ./install.sh`.
 
+## License
+MIT.
 
 <h1 align="center">clangjesus</h1>
