@@ -1,7 +1,6 @@
 <div align="center">
     <img width="400" align="center" src="./.github/pictures/preview.png">
     <h3 align="center">details</h3>
-    <p align="center">by, clangjesus</h3>
 </div>
 When piped, `details` will show the output from
 the piped output into a GUI window. This makes it
@@ -30,4 +29,3 @@ Run `bash ./install.sh`.
 ## License
 MIT.
 
-<h1 align="center">clangjesus</h1>
