@@ -1,5 +1,5 @@
 <div>
-    <img align="center" src=".github/pictures/preview.png">
+    <img align="center" src="./.github/pictures/preview.png">
     <h3 align="center">details</h3>
     <p align="center">by, clangjesus</h3>
     <hr>
