@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QLabel>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStatusBar>
@@ -10,6 +11,7 @@
 #include <fstream>
 #include <cstdio>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -18,7 +20,7 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const auto VERSION = "1.0.0";
+const auto VERSION = "1.0.0-1";
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -42,6 +44,19 @@ static auto strip_escape_sequence(const std::string& input) -> std::string {
     return std::regex_replace(input, escapeRegex, "");
 }
 
+static auto exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 template <typename T>
 static auto arrayAsVector(T *arr[], int optionalLength = 0) -> std::vector<T*> {
     if (optionalLength == 0)
@@ -53,10 +68,24 @@ static auto arrayAsVector(T *arr[], int optionalLength = 0) -> std::vector<T*> {
     return vectorizedArray;
 }
 
-auto main(int argc, char **argv) -> int {
-    for (const auto &a : arrayAsVector(argv, argc)) {
-        printf("INFO: item: %s\n", a);
+template <typename T>
+static auto stringifyVector(std::vector<T>& vec) -> std::string {
+    auto delim = " ";
+    std::ostringstream oss;
+    for (auto it = vec.begin(); it != vec.end(); ++it) {
+        if (it != vec.begin())
+            oss << delim;
+        oss << *it;
     }
+    return oss.str();
+}
+
+auto main(int argc, char **argv) -> int {
+    bool execute_and_read_cmd = false;
+
+    if (argc - 1 != 0) {
+        execute_and_read_cmd = true;
+    }   
 
     QApplication app(argc, argv);
     QWidget window;
@@ -66,7 +95,27 @@ auto main(int argc, char **argv) -> int {
     QFont font("monospace");
     font.setStyleHint(QFont::Monospace);
 
-    std::string data = read_file("/dev/stdin");
+    std::string data;
+
+    if (!execute_and_read_cmd) {
+        data = read_file("/dev/stdin");
+    } else {
+        auto a = arrayAsVector(argv);
+        a.erase(a.begin());
+        std::string c = stringifyVector(a);
+        printf("INFO: c = %s\n", c.c_str());
+        data = std::string(exec(c.c_str()));
+    }
+
+    if (data.empty()) {
+        QMessageBox *msg = new QMessageBox(&window);
+        msg->setIcon(QMessageBox::Warning);
+        msg->setText("clangjesus is sorry");
+        msg->setInformativeText("As soon as you click ok, you'll see an empty screen; why? Because you just encountered a bug.");
+        msg->setWindowTitle("Bug");
+        msg->exec();
+    }
+
     std::string cleanedData = strip_escape_sequence(data);
     QString text = QString::fromStdString(cleanedData);
 
