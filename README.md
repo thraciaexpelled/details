@@ -23,7 +23,7 @@ $ details install.log
 
 ### Building
 To install `details`, run `qmake` on the project's
-root directory.
+root directory and run `make`.
 
 ### Installing
 Run `bash ./install.sh`.
