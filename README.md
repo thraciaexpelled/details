@@ -9,12 +9,6 @@ messages etc.
 
 <br>
 
-> [!CAUTION]
-> ### Ethical Awareness
-> This program has a function that was **vibe coded**;
-> depending on your moral stance, you may or may not
-> choose to use this software.
-
 ## Usage
 
 ### Example 1

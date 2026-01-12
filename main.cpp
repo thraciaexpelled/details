@@ -7,17 +7,11 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
-#include <fmt/core.h>
-#include <fmt/ranges.h>
-
-#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <format>
 #include <fstream>
-#include <memory>
 #include <regex>
-#include <stdexcept>
 #include <string>
 
 // specific headers for cross-platform compatibility
@@ -32,7 +26,7 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const auto VERSION = "2.0.0";
+const auto VERSION = "2.0.1";
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -56,26 +50,6 @@ static auto strip_escape_sequence(const std::string& input) -> std::string {
     return std::regex_replace(input, escapeRegex, "");
 }
 
-std::string get_command_output(const std::string& cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-
-    // Use unique_ptr with a custom deleter to ensure pclose is always called
-    // even if an exception is thrown.
-    std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(cmd.c_str(), "r"), PCLOSE);
-
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-
-    // Read the output a chunk at a time
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-
-    return result;
-}
-
 auto main(int argc, char **argv) -> int {
     bool read_from_filename = false;
 
@@ -86,7 +60,7 @@ auto main(int argc, char **argv) -> int {
     QApplication app(argc, argv);
     QWidget window;
     window.setFixedSize(WIDTH, HEIGHT);
-    window.setWindowTitle(QString::fromStdString(std::format("details - v{}", VERSION)));
+    window.setWindowTitle(QString::fromStdString(std::format("details v{}", VERSION)));
 
     QFont font("monospace");
     font.setStyleHint(QFont::Monospace);
