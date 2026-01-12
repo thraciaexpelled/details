@@ -7,20 +7,33 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include <array>
+#include <cstdio>
+#include <cstdlib>
 #include <format>
 #include <fstream>
-#include <cstdio>
+#include <memory>
 #include <regex>
-#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-#define LEN(x) sizeof(x) / sizeof(x[0])
+// specific headers for cross-platform compatibility
+#ifdef _WIN32
+#define POPEN _popen
+#define PCLOSE _pclose
+#else
+#define POPEN popen
+#define PCLOSE pclose
+#endif
 
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const auto VERSION = "1.0.0-1";
+const auto VERSION = "1.1.0";
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -44,46 +57,30 @@ static auto strip_escape_sequence(const std::string& input) -> std::string {
     return std::regex_replace(input, escapeRegex, "");
 }
 
-static auto exec(const char* cmd) {
+std::string get_command_output(const std::string& cmd) {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+
+    // Use unique_ptr with a custom deleter to ensure pclose is always called
+    // even if an exception is thrown.
+    std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(cmd.c_str(), "r"), PCLOSE);
+
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+
+    // Read the output a chunk at a time
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
+
     return result;
-}
-
-template <typename T>
-static auto arrayAsVector(T *arr[], int optionalLength = 0) -> std::vector<T*> {
-    if (optionalLength == 0)
-        optionalLength = LEN(arr);
-    std::vector<T*> vectorizedArray;
-    for (int i = 0; i < optionalLength; ++i) {
-        vectorizedArray.push_back(arr[i]);
-    }
-    return vectorizedArray;
-}
-
-template <typename T>
-static auto stringifyVector(std::vector<T>& vec) -> std::string {
-    auto delim = " ";
-    std::ostringstream oss;
-    for (auto it = vec.begin(); it != vec.end(); ++it) {
-        if (it != vec.begin())
-            oss << delim;
-        oss << *it;
-    }
-    return oss.str();
 }
 
 auto main(int argc, char **argv) -> int {
     bool execute_and_read_cmd = false;
 
-    if (argc - 1 != 0) {
+    if (argc > 1) {
         execute_and_read_cmd = true;
     }   
 
@@ -100,11 +97,12 @@ auto main(int argc, char **argv) -> int {
     if (!execute_and_read_cmd) {
         data = read_file("/dev/stdin");
     } else {
-        auto a = arrayAsVector(argv);
-        a.erase(a.begin());
-        std::string c = stringifyVector(a);
-        printf("INFO: c = %s\n", c.c_str());
-        data = std::string(exec(c.c_str()));
+        std::vector<std::string> cmd;
+        for (int i = 1; i < argc; ++i) {
+            cmd.push_back(std::string(argv[i]));
+        }
+        auto cmdline = fmt::format("{}", fmt::join(cmd, " "));
+        data = get_command_output(cmdline);
     }
 
     if (data.empty()) {

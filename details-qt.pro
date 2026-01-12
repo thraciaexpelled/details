@@ -3,7 +3,7 @@ TARGET = details
 
 QT = core gui
 
-CONFIG += c++20
+QMAKE_CXXFLAGS += -lfmt -std=c++20
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
