@@ -7,6 +7,12 @@ the piped output into a GUI window. This makes it
 easier to look at/for things such as logs, error
 messages etc.
 
+> [!CAUTION]
+> ### Ethical Awareness
+> This program has a function that was **vibe coded**;
+> depending on your moral stance, you may or may not
+> choose to use this software.
+
 ## Usage
 
 ### Example 1

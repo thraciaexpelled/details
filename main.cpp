@@ -19,7 +19,6 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 // specific headers for cross-platform compatibility
 #ifdef _WIN32
@@ -33,7 +32,7 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const auto VERSION = "1.1.0";
+const auto VERSION = "2.0.0";
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -78,11 +77,11 @@ std::string get_command_output(const std::string& cmd) {
 }
 
 auto main(int argc, char **argv) -> int {
-    bool execute_and_read_cmd = false;
+    bool read_from_filename = false;
 
     if (argc > 1) {
-        execute_and_read_cmd = true;
-    }   
+        read_from_filename = true;
+    }
 
     QApplication app(argc, argv);
     QWidget window;
@@ -94,24 +93,23 @@ auto main(int argc, char **argv) -> int {
 
     std::string data;
 
-    if (!execute_and_read_cmd) {
+    if (!read_from_filename) {
         data = read_file("/dev/stdin");
     } else {
-        std::vector<std::string> cmd;
-        for (int i = 1; i < argc; ++i) {
-            cmd.push_back(std::string(argv[i]));
-        }
-        auto cmdline = fmt::format("{}", fmt::join(cmd, " "));
-        data = get_command_output(cmdline);
-    }
+        std::string filepath(argv[1]);
+        data = read_file(filepath);
 
-    if (data.empty()) {
-        QMessageBox *msg = new QMessageBox(&window);
-        msg->setIcon(QMessageBox::Warning);
-        msg->setText("clangjesus is sorry");
-        msg->setInformativeText("As soon as you click ok, you'll see an empty screen; why? Because you just encountered a bug.");
-        msg->setWindowTitle("Bug");
-        msg->exec();
+        for (int i = 0; i < (int)data.length(); ++i) {
+            if ((unsigned char)data[i] > 127) {
+                QMessageBox *msg = new QMessageBox(&window);
+                msg->setIcon(QMessageBox::Warning);
+                msg->setText("Output has non-ASCII characters");
+                msg->setInformativeText("Details has found non-ASCII characters in the output; which means the target file is possibly a binary. Click OK to continue anyway");
+                msg->setWindowTitle("details - Binary File");
+                msg->exec();
+                break;
+            }
+        }
     }
 
     std::string cleanedData = strip_escape_sequence(data);
