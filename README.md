@@ -7,6 +7,8 @@ the piped output into a GUI window. This makes it
 easier to look at/for things such as logs, error
 messages etc.
 
+<br>
+
 > [!CAUTION]
 > ### Ethical Awareness
 > This program has a function that was **vibe coded**;
@@ -22,7 +24,7 @@ $ wine game.exe |& details
 
 ### Example 2
 ```commandline
-$ <TODO>
+$ details install.log
 ```
 
 ### Building
