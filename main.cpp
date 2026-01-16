@@ -14,19 +14,12 @@
 #include <regex>
 #include <string>
 
-// specific headers for cross-platform compatibility
-#ifdef _WIN32
-#define POPEN _popen
-#define PCLOSE _pclose
-#else
-#define POPEN popen
-#define PCLOSE pclose
-#endif
-
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const auto VERSION = "2.0.1";
+#ifndef VERSION
+#define VERSION "2.1.0"
+#endif
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -50,6 +43,14 @@ static auto strip_escape_sequence(const std::string& input) -> std::string {
     return std::regex_replace(input, escapeRegex, "");
 }
 
+static auto pad(int length) -> std::string {
+    std::string padout;
+    for (int i = 0; i < length; ++i) {
+        padout.append(" ");
+    }
+    return padout;
+}
+
 auto main(int argc, char **argv) -> int {
     bool read_from_filename = false;
 
@@ -65,12 +66,13 @@ auto main(int argc, char **argv) -> int {
     QFont font("monospace");
     font.setStyleHint(QFont::Monospace);
 
-    std::string data;
+    std::string data, filepath;
 
     if (!read_from_filename) {
         data = read_file("/dev/stdin");
+        filepath = "Standard Input";
     } else {
-        std::string filepath(argv[1]);
+        filepath = std::string(argv[1]);
         data = read_file(filepath);
 
         for (int i = 0; i < (int)data.length(); ++i) {
@@ -94,10 +96,10 @@ auto main(int argc, char **argv) -> int {
     layout->setContentsMargins(0, 0, 0, 0);
 
     // text
-    auto *textEdit = new QTextEdit(&window);
+    auto *textEdit = new QPlainTextEdit(&window);
     textEdit->setFont(font);
     textEdit->setReadOnly(true);
-    textEdit->setText(text);
+    textEdit->setPlainText(text);
     layout->addWidget(textEdit);
 
     // status bar
@@ -111,7 +113,8 @@ auto main(int argc, char **argv) -> int {
         return c;
     };
 
-    std::string dataInfo = std::format("Lines: {}, Characters: {}", lines(), cleanedData.length());
+    std::string dataInfo =
+        std::format("Lines: {}, Characters: {}{}{}", lines(), cleanedData.length(), pad(WIDTH / 2), filepath);
     QString QDataInfo = QString::fromStdString(dataInfo);
 
     auto *statusBar = new QStatusBar(&window);
