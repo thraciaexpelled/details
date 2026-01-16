@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <format>
@@ -18,7 +19,7 @@ const int WIDTH = 800;
 const int HEIGHT = 800;
 
 #ifndef VERSION
-#define VERSION "2.1.0"
+#define VERSION "2.2.0"
 #endif
 
 static auto read_file(std::string_view path) -> std::string {
@@ -41,14 +42,6 @@ static auto strip_escape_sequence(const std::string& input) -> std::string {
     printf("WARNING: escape sequences won't be rendered in the output\n");
     std::regex escapeRegex(R"((\x1B\[[0-?]*[ -/]*[@-~]))");
     return std::regex_replace(input, escapeRegex, "");
-}
-
-static auto pad(int length) -> std::string {
-    std::string padout;
-    for (int i = 0; i < length; ++i) {
-        padout.append(" ");
-    }
-    return padout;
 }
 
 auto main(int argc, char **argv) -> int {
@@ -114,11 +107,19 @@ auto main(int argc, char **argv) -> int {
     };
 
     std::string dataInfo =
-        std::format("Lines: {}, Characters: {}{}{}", lines(), cleanedData.length(), pad(WIDTH / 2), filepath);
+        std::format("Lines: {}, Characters: {}", lines(), cleanedData.length());
     QString QDataInfo = QString::fromStdString(dataInfo);
 
     auto *statusBar = new QStatusBar(&window);
-    statusBar->showMessage(QDataInfo);
+    auto *stats_label = new QLabel(&window);
+    stats_label->setText(QDataInfo);
+
+    auto *filename_label = new QLabel(&window);
+    filename_label->setText(QString::fromStdString(filepath));
+    filename_label->setAlignment(Qt::AlignRight);
+
+    statusBar->addWidget(stats_label);
+    statusBar->addWidget(filename_label, 1);
     layout->addWidget(statusBar);
 
     window.show();
