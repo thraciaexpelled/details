@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <format>
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <string>
 
@@ -19,8 +20,17 @@ const int WIDTH = 800;
 const int HEIGHT = 800;
 
 #ifndef VERSION
-#define VERSION "2.2.0"
+#define VERSION "3.0.0"
 #endif
+
+static auto read_stdin(void) -> std::string {
+    std::string data;
+    for (std::string line; std::getline(std::cin, line);) {
+        data.append(line);
+        data.append("\n");
+    }
+    return data;
+}
 
 static auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -62,7 +72,7 @@ auto main(int argc, char **argv) -> int {
     std::string data, filepath;
 
     if (!read_from_filename) {
-        data = read_file("/dev/stdin");
+        data = read_stdin();
         filepath = "Standard Input";
     } else {
         filepath = std::string(argv[1]);
